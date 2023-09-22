@@ -1,5 +1,5 @@
 
-# CORRESPONDE  A ENTREGABLE CLASE 37 PRÁCTICA DE INTEGRACIÓN
+# CORRESPONDE  A ENTREGABLE CLASE 41 Modulos De Testing Para El Proyecto Final
 ###  RUTAS
         - Ruta de inicio, de entrada a la api (redirige al login): 
         http://localhost:8000/api/v1/
@@ -20,10 +20,10 @@
 ### ADEMÁS TIENE: MANEJO DE VARIABLES DE ENTORNO CON dotenv CAMBIO DE VARIABLES DE ENTORNO DURANTE EJECUCIÓN CON cross-env, SE MUESTRAN RUTAS EN TABLA EN CONSOLA LADO BACKEND CON express-routemap, (PRONTO TENDRÁ MANEJO DE ARCHIVOS CON MULTER).
 
 ### Como usar la app:
-<h2> Ruta de mocking, generando 50 productos con faker en localhost:8081/mockingproducts </h2>
+<h4> Ruta de mocking, generando 50 productos con faker en localhost:8081/mockingproducts </h4>
 
-<h2> Ruta de creacion de producto con postmnan mediante metodo post y raw json http://localhost:8000/api/v1/products/</h2>
-<h2>La ruta anterior valida si las propiedades requeridas del producto a crear  son enviadas  y envia mensaje personalizado con error-handler y Http-Status-Code</h2>
+<h4> Ruta de creacion de producto con postmnan mediante metodo post y raw json http://localhost:8000/api/v1/products/</h4>
+<h4>La ruta anterior valida si las propiedades requeridas del producto a crear  son enviadas  y envia mensaje personalizado con error-handler y Http-Status-Code</h4>
 <h2> Ruta de inicio, de entrada a la api:   </h2>
 <h4> http://localhost:8000/api/v1/  la cual redirige al login </h4>
 
@@ -46,7 +46,7 @@
         Para la paginación desde mongo atlas con limit, sort y query (método GET):
         http://localhost:8000/api/v1/views/products?page=1&limit=3&sort={"code":1}&query={"description": "Desde fromulario con socket"}
 ## Consigna. Se está requiriendo lo siguiente:
-- Con base en el proyecto que venimos desarrollando, toca solidificar algunos procesos.
+- Realizar módulos de testing para tu proyecto principal, utilizando los módulos de mocha + chai + supertest.
 
 ### TESTEO:
 - 
@@ -57,23 +57,14 @@
 - Link al repositorio de Github con el proyecto completo, sin la carpeta de node_modules. ((Hecho)).
 
 ### Sugerencias
-- Te recomendamos testear muy bien todas las políticas de acceso. ¡Son la parte fuerte de este entregable!
+- Ya que el testing lo desarrollarás tú, no hay una guía de test por leer. ¡Aplica tu mayor creatividad en tus pruebas! 
 
 ### Aspectos a incluir
-- Realizar un sistema de recuperación de contraseña, la cual envíe por medio de un correo un botón que redireccione a una página para restablecer la contraseña (no recuperarla).
-    - link del correo debe expirar después de 1 hora de enviado.
-    - Si se trata de restablecer la contraseña con la misma contraseña del usuario, debe impedirlo e indicarle que no se puede colocar la misma contraseña.
-    - Si el link expiró, debe redirigir a una vista que le permita generar nuevamente el correo de restablecimiento, el cual contará con una nueva duración de 1 hora.
-- Establecer un nuevo rol para el schema del usuario llamado “premium” el cual estará habilitado también para crear productos.
-- Modificar el schema de producto para contar con un campo “owner”, el cual haga referencia a la persona que creó el producto.
-    - Si un producto se crea sin owner, se debe colocar por defecto “admin”.
-    - El campo owner deberá guardar sólo el correo electrónico (o _id, lo dejamos a tu conveniencia) del usuario que lo haya creado (Sólo podrá recibir usuarios premium).
-- Modificar los permisos de modificación y eliminación de productos para que:
-    - Un usuario premium sólo pueda borrar los productos que le pertenecen.
-    - El admin pueda borrar cualquier producto, aún si es de un owner.
-- Además, modificar la lógica de carrito para que un usuario premium NO pueda agregar a su carrito un producto que le pertenece.
-- Implementar una nueva ruta en el router de api/users, la cual será /api/users/premium/:uid  la cual permitirá cambiar el rol de un usuario, de “user” a “premium” y viceversa.
-
+- Se deben incluir por lo menos 3 tests desarrollados para:
+    - Router de products.
+    - Router de carts.
+    - Router de sessions.
+-NO desarrollar únicamente tests de status, la idea es trabajar lo mejor desarrollado posible las validaciones de testing.
 
 
 ## Rutas para servidor con file-system en puerto 8081 (se deshabilito, es decir, se comentó en el código):
