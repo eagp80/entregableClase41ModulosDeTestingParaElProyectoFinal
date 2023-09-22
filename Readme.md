@@ -64,7 +64,7 @@
     - Router de products.
     - Router de carts.
     - Router de sessions.
--NO desarrollar únicamente tests de status, la idea es trabajar lo mejor desarrollado posible las validaciones de testing.
+- NO desarrollar únicamente tests de status, la idea es trabajar lo mejor desarrollado posible las validaciones de testing.
 
 
 ## Rutas para servidor con file-system en puerto 8081 (se deshabilito, es decir, se comentó en el código):
