@@ -1,18 +1,30 @@
 import { Router } from "express";
 import { generateProduct } from "../utils/generate-products.js";
+import { HttpResponse } from "../middleware/error-handler.js";
+const httpResp  = new HttpResponse;
 
-const router = Router();
 
-router.get("/", async (req, res) => {
-  let products = [];
-  for (let index = 0; index < 50; index++) {
-    products.push(generateProduct());
-  }
+class MockingProductsRoutes {
+path= "/mockingproducts";
+router = Router();
 
-  return res.json({
-    message: `generate products`,
-    products,
+constructor() {
+  this.initMockingProductsRoutes();
+}
+initMockingProductsRoutes(){
+  this.router.get(`${this.path}`, async (req, res) => {
+    let products = [];
+    for (let index = 0; index < 50; index++) {
+      products.push(generateProduct());
+    }
+  
+    return res.json({
+      message: `generate products`,
+      products,
+    });
   });
-});
+}
 
-export default router;
+}
+
+export default MockingProductsRoutes;

@@ -5,6 +5,9 @@ import { API_VERSION } from "../config/config.js";
 import passport from "passport";
 import { passportCall } from "../utils/jwt.js";
 import handlePolicies from "../middleware/handle-policies.middleware.js";
+import {HttpResponse} from "../middleware/error-handler.js";
+
+// const httpResp  = new HttpResponse;
 
 
 
@@ -27,7 +30,12 @@ class SessionViewsRoutes {
       try{
         res.render("login");
       }catch(error){
-      console.log("🚀 ~ file: sessionViews.routes.js:21 ~ SessionViewsRoutes ~ this.router.get ~ error:", error)
+        req.logger.fatal(
+          `Method: ${req.method}, url: ${
+            req.url
+          } - time: ${new Date().toLocaleTimeString()
+          } con ERROR: ${error.message}`); 
+      
       }
     })
 
@@ -36,7 +44,12 @@ class SessionViewsRoutes {
       try{
         res.render("register");
       }catch(error){
-        console.log("🚀 ~ file: sessionViews.routes.js:30 ~ SessionViewsRoutes ~ this.router.get ~ error:", error)
+        req.logger.fatal(
+          `Method: ${req.method}, url: ${
+            req.url
+          } - time: ${new Date().toLocaleTimeString()
+          } con ERROR: ${error.message}`); 
+        
       }
     })
 
@@ -46,7 +59,12 @@ class SessionViewsRoutes {
     async (req, res) =>{
       try{
         const user = req.session.user?._doc || req.user.user|| "usuario no logueado";
-        console.log("🚀 ~ file: sessionViews.routes.js:38 ~ SessionViewsRoutes ~ this.router.get ~ user:", user)
+        req.logger.info(
+          `Method: ${req.method}, url: ${
+            req.url
+          } - time: ${new Date().toLocaleTimeString()
+          } con User: ${user}`); 
+        
         res.render("profile", {
          email:  user.email,
          role: user.role,
@@ -60,13 +78,26 @@ class SessionViewsRoutes {
           },
         });
       }catch(error){
-        console.log("🚀 ~ file: sessionViews.routes.js:50 ~ SessionViewsRoutes ~ this.router.get ~ error:", error)
+        req.logger.fatal(
+          `Method: ${req.method}, url: ${
+            req.url
+          } - time: ${new Date().toLocaleTimeString()
+          } con ERROR: ${error.message}`);        
       }
     })
 
     this.router.get(`${this.path}recover`, async (req,res)=>{
       res.render("recover");
     })
+
+    this.router.get(`${this.path}set-new-password/:token`, (req, res) => {
+      const { token } = req.params
+      res.render("setNewPassword", {
+        token
+      });
+    });
+
+
   }
 }
 export default SessionViewsRoutes;

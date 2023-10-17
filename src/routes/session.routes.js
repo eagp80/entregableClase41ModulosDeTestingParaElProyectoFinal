@@ -1,13 +1,18 @@
 import { Router } from "express";
 import userModel from "../dao/models/user.model.js";
 import session from "express-session";
-import { API_VERSION } from "../config/config.js";
+import { API_VERSION, SECRET_JWT } from "../config/config.js";
 import { createHashValue, isValidPasswd } from "../utils/encrypt.js";
 import passport from "passport";
 import { generateJWT } from "../utils/jwt.js";
+import jwt from "jsonwebtoken";
+
 
 import { passportCall } from "../utils/jwt.js";
 import handlePolicies from "../middleware/handle-policies.middleware.js";
+import {HttpResponse} from "../middleware/error-handler.js";
+import { emailRefreshPassword } from "../utils/email.js";
+
 
 
 
@@ -17,6 +22,7 @@ class SessionRoutes {//no es un Router pero adentro tiene uno
   path = "/session";
   router = Router();
   api_version= API_VERSION;
+  httpResp  = new HttpResponse();
 
   constructor() {
     this.initSessionRoutes();
@@ -137,7 +143,7 @@ class SessionRoutes {//no es un Router pero adentro tiene uno
           `Method: ${req.method}, url: ${
             req.url
           } - time: ${new Date().toLocaleTimeString()
-          } -Guardando user en req.user: ${req.user}`); 
+          } -Guardando user en req.user: `+JSON.stringify(req.user)); 
         
         // TODO: RESPUESTA DEL TOKEN ALMACENADO EN LA COOKIE
          res.cookie("token", token, { maxAge: 1000000, httpOnly: true });
@@ -251,7 +257,7 @@ class SessionRoutes {//no es un Router pero adentro tiene uno
       res.send({error:"Failed"});
     })
 
-    this.router.post(`${this.path}/recover-psw`,async (req,res)=>{
+    this.router.post(`${this.path}/recover-psw`,async (req,res)=>{//esta ruta ya no se usa
       try {
         req.logger.info(
           `Method: ${req.method}, url: ${
@@ -259,10 +265,10 @@ class SessionRoutes {//no es un Router pero adentro tiene uno
           } - time: ${new Date().toLocaleTimeString()
           } -BODY UPDATE*** CAMPO CORREO PARA ACTUALIZAR PASSWORD:`+ JSON.stringify(req.body.email));
         const {new_password,email}=req.body;
-        const newPswHashed = await createHashValue(new_password);
-        const user = await userModel.findOne({email});
+        const newPswHashed = await createHashValue(new_password);//encriptamos la nueva
+        const user = await userModel.findOne({email});//traemos usuario en base de datos
         if(!user) return res.status(401).json({message:"credenciales invalidas o erroneas"});
-        const updateUser = await userModel.findOneAndUpdate({email},{password:newPswHashed});
+        const updateUser = await userModel.findOneAndUpdate({email},{password:newPswHashed});//cambiamos la clave vieja
         if(!updateUser){
           return res.json({message:"Problemas actualizando contraseña"});
         }
@@ -276,6 +282,71 @@ class SessionRoutes {//no es un Router pero adentro tiene uno
           } con ERROR: ${error}`);             
       }
     })
+
+    this.router.post(`${this.path}/forgot-password`, async (req,res)=>{
+      const { email } = req.body;
+      const user = await userModel.findOne({ email });
+
+      if (!user) {
+        const error = new Error(`The user does not exist`);
+        return this.httpResp.NotFound(res, 'Unexisting User', error);
+      }
+
+      try {
+        const token = await generateJWT({ id: user._id, email: user.email, first_name: user.first_name });
+        emailRefreshPassword(user, token);
+        return this.httpResp.OK(res, 'OK', 'We have sent an email with the instructions')
+      } catch (error) {
+        req.logger.error("There was an error with the recovery email");
+        return this.httpResp.Error(res, 'Unexisting User', error);
+
+      }
+    })
+
+    this.router.post(`${this.path}/set-new-password/:token`,async (req, res) => {
+      const { token } = req.params;
+      const { password } = req.body;
+      console.log("🚀 ~ file: session.routes.js:309 ~ SessionRoutes ~ this.router.post ~ req.body=password:", password)
+    
+      try {
+        const user = jwt.verify(token, SECRET_JWT);
+        const dbUser = await userModel.findById(user.user.id);
+        console.log("🚀 ~ file: session.routes.js:313 ~ SessionRoutes ~ this.router.post ~ dbUser:", dbUser)
+    
+        if (!dbUser) {
+          return this.httpResp.NotFound(res, 'Unexisting User', `Could not find the user`)
+        }
+    
+        // Verificar si la nueva contraseña es igual a la contraseña actual
+        if (isValidPasswd(password, dbUser.password)) {
+          console.log("dbUser.password", dbUser.password);
+          console.log("🚀 ~ file: session.routes.js:322 ~ SessionRoutes ~ this.router.post ~ password:", password)
+          let bandera = 1;
+          console.log("🚀 ~ file: session.routes.js:323 ~ SessionRoutes ~ this.router.post ~ bandera:", bandera)
+          return this.httpResp.BadRequest(res, 'Password Error', 'El nuevo password debe ser diferente al actual')
+        }
+    
+        const newPassword = await createHashValue(password);
+        await userModel.findByIdAndUpdate(
+          user.user.id,
+          { password: newPassword },
+          { new: true }
+        );
+    
+        return this.httpResp.OK(res, 'OK', 'Password actualizado');
+    
+      } catch (error) {
+        req.logger.fatal(
+          `Method: ${req.method}, url: ${
+            req.url
+          } - time: ${new Date().toLocaleTimeString()
+          } con ERROR: ${error}`); 
+        // Redirección en caso de token no válido
+        return res.redirect('../../recover');
+      }
+    
+    });
+
   }  
 }
 export default SessionRoutes;
