@@ -22,7 +22,6 @@ class ProductMongoManager {
       return productMongoDetail;
     } catch (error) {
 
-      //Tutor: esta ee una opcion ademas del log o remover el try catch (throw error)
       throw error;
     }
   };
@@ -31,7 +30,6 @@ class ProductMongoManager {
 
 
     try {
-      // TODO REVISANDO SI EL PRODUCTO YA FUE CREADO ANTERIOMENTE
       const productMongoDetail = await productsMongoModel.findOne({
         code: bodyProductMongo.code,
       });
@@ -66,8 +64,7 @@ class ProductMongoManager {
     deleteProduct = async (id, updatedData) => {
 
       try {
-        const productDeleted = await productsMongoModel.findByIdAndDelete(id)
-        
+        const productDeleted = await productsMongoModel.findByIdAndDelete(id);        
           
         if(!productDeleted) return {msg: `Unexisting product for to delete with id: ${id}`}
   
@@ -78,7 +75,5 @@ class ProductMongoManager {
         throw new Error('Error while deleting the product');
       }
     }
-
 }
-
 export default ProductMongoManager;
