@@ -7,7 +7,12 @@ import ProductMongoManager from "../dao/managers/productMongo.manager.js";
 import { HttpResponse, EnumErrors } from "../middleware/error-handler.js";
 import { passportCall } from "../utils/jwt.js";
 import handlePolicies from "../middleware/handle-policies.middleware.js";
+import ProductController from "../controllers/product.controller.js";
  const  httpResp  = new HttpResponse();
+
+const productController = new ProductController();
+
+
 
 class ProductsMongoRoutes {//no es un Router pero adentro tiene uno
   path = "/products";
@@ -46,30 +51,7 @@ class ProductsMongoRoutes {//no es un Router pero adentro tiene uno
 
     //**********************Obtener un producto por su pid******************************* */
     //*********************************************************************************** */
-    this.router.get(`${this.path}/:pid`, async (req, res) => {
-      try {
-        const { pid } = req.params;
-        const productMongoDetail = await this.productMongoManager.getProductMongoById(
-          pid
-        );
-        // TODO: AGREGAR VALIDACION
-        return res.json({
-          message: `get productMongo info of ${pid} succesfully`,
-          productMongo: productMongoDetail,
-        });
-      } catch (error) {
-        //si llega error aca decidir loguearlo (con logger) y devolver respuesta al usuario
-        req.logger.fatal(
-          `Method: ${req.method}, url: ${
-            req.url
-          } - time: ${new Date().toLocaleTimeString()
-          } con ERROR: ${error.message}`); 
-
-        //usar codigos de status para enviar el error, 
-        //tambien se puede usar un handler global+uso de next ver la clase
-        res.send(error);
-      }
-    });
+    this.router.get(`${this.path}/:pid`, productController.getProductById);
 
     //*******Crear  un producto pasando sus popiedades (clave:valor) por el body desde postman********** */
     //*********************************************************************************** */
