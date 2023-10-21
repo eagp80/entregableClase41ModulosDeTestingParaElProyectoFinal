@@ -4,6 +4,12 @@ import CartsMongoManager from '../dao/managers/cartMongo.manager.js';
 import ProductMongoManager from '../dao/managers/productMongo.manager.js'
 import cartsMongoModel from "../dao/models/cartsMongo.models.js";
 
+import userModel from "../dao/models/user.model.js";
+import ticketsManager from "../dao/managers/tickets.manager.js";
+import { Schema, model, Types } from "mongoose";
+const { ObjectId } = Types;
+
+
 class CartController {
 
   constructor() {
@@ -36,7 +42,7 @@ class CartController {
   };
 
   getCarts = async (req, res) => {
-    //efren
+    //TODO no implementada aun
 
   };
 
@@ -64,18 +70,41 @@ class CartController {
   };
 
   updateCartById = async (req, res) => {
-    //efren
+    try{
+      const { cid} = req.params;
+      const arrayItemsProducts= req.body.products;
+      let result = await cartsMongoModel.findOneAndUpdate({_id:`${cid}`},{products:arrayItemsProducts}, { new: true });
+      return this.httpResp.OK(res,`cartsMongo update array of products with PUT sucessfully`, {result:result}); 
+
+    } catch (error) {
+      req.logger.fatal(
+        `Method: ${req.method}, url: ${
+          req.url
+        } - time: ${new Date().toLocaleTimeString()
+        } con ERROR: ${error.message}`);  
+        return this.httpResp.Error(res,`cartsMongo NOT update array of products with PUT`, {error:this.enumError.DATABASE_ERROR}); 
+    }
 
   };
 
   deleteCart = async (req, res) => {
-    //efren
+    //TODO no implementada aun
 
   };
 
   deleteAllProductsInCart = async (req, res) => {
-    //efren
-
+    try{
+      const { cid} = req.params;
+      let result = await cartsMongoModel.findOneAndUpdate({_id:`${cid}`},{products:[]});
+      return this.httpResp.OK(res,`cartsMongo DELETE all products sucessfully`, {result:result});       
+    } catch (error) {
+      req.logger.fatal(
+        `Method: ${req.method}, url: ${
+          req.url
+        } - time: ${new Date().toLocaleTimeString()
+        } con ERROR: ${error.message}`);  
+        return this.httpResp.Error(res,`the cart by Id in Mongo Atlas not deleted`, {error:this.enumError.DATABASE_ERROR}); 
+    }
   };
 
   createProductInCart = async (req, res) => {
@@ -236,17 +265,106 @@ class CartController {
   };
 
   updateCartItemQuantity = async (req, res) => {
-    //efren
+    try{
+      let result = await cartsMongoModel.findOneAndUpdate(
+        { _id: req.params.cid, "products.product": req.params.pid },
+        { $set: { "products.$.quantity": req.body.quantity } },
+        { new: true });   
+        return this.httpResp.OK(res,`cartsMongo PUT set quantity in product pid of cart cid`, {result:result}); 
+    } catch (error) {
+      req.logger.fatal(
+        `Method: ${req.method}, url: ${
+          req.url
+        } - time: ${new Date().toLocaleTimeString()
+        } con ERROR: ${error.message}`);   
+        return this.httpResp.Error(res,`Error cartsMongo PUT NOT set quantity in product pid of cart cid`, {error:this.enumError.DATABASE_ERROR});
+    }
 
   };
 
-  deleteItemInCart = async (req, res) => {
-    //efren
-
+  deleteItemInCart = async (req, res) => {//delete id product in cart by id
+    try{
+      const { cid, pid } = req.params;
+      const cart = await cartsMongoModel.findById({_id: cid}); 
+      const index =  cart.products.findIndex(item => item.product.toString() === pid);
+      console.log("🚀 ~ file: cart.controller.js:285 ~ CartController ~ deleteItemInCart ~ index:", index);
+      if(index>=0){
+        const cartAux = cart;
+        cartAux.products.splice(index,1);    
+        await cartsMongoModel.updateOne({_id:cid}, cartAux);
+        const cartUpdate = await cartsMongoModel.findById({_id: cid}); 
+        return this.httpResp.OK(res,`the product by Id in cart by Id in Mongo Atlas deleted`, {cartUpdate: cartUpdate});        
+      }else{
+        return this.httpResp.NotFound(res,`no existe el producto en este carrito`, {productId: pid}); 
+      }
+    } catch (error) {
+      req.logger.fatal(
+        `Method: ${req.method}, url: ${
+          req.url
+        } - time: ${new Date().toLocaleTimeString()
+        } con ERROR: ${error.message}`);  
+        return this.httpResp.Error(res,`the cart by Id in Mongo Atlas not deleted`, {error:this.enumError.DATABASE_ERROR}); 
+    }
   };
 
   purchaseCart = async (req, res) => {
-    //efren
+    const { cid } = req.params;    
+    try {
+    // verificando existencia del cart
+    const cart = await this.cartMongoManager.getCartMongoByIdPopulate(cid);         
+      if (!cart)  return this.httpResp.BadRequest(res,'Cart not found',cart);
+    const outOfStock = [];// defino inicializo variables para almacenar productos cuyo stock es menor a la compra
+    let purchaseAmount = 0;// defino inicializo monto total de compra
+
+    // Si tiene existencia suficiente: lo sumo al monto total de la compra, actualizo la existencia, y lo elimino del carrito.
+    // Si no tiene existencia suficiente agrego al producto al arreglo de "outOfStock"
+    for (const element of cart.products) {
+      if ( element.product.stock > element.quantity ) {
+        purchaseAmount += element.quantity * element.product.price
+        await this.productMongoManager.updateProduct(element.product._id, {
+          stock: element.product.stock - element.quantity
+        })
+        await this.cartMongoManager.deleteProductFromCart(cid, element.product._id)
+      } else {
+        outOfStock.push(element.product.title)
+      }
+    }
+    // Si no hay ningun producto tenia stock
+    if(outOfStock.length > 0 && purchaseAmount === 0) {
+      req.logger.debug(
+        `Method: ${req.method}, url: ${
+          req.url
+        } - time: ${new Date().toLocaleTimeString()
+        } con outOfStock: ${outOfStock}`);
+      return this.httpResp.BadRequest(res,'Selected products are out of stock.',null);   
+    }
+
+    // verificando el id de usuario que es propietario de ese cart
+    const userWithCart = await userModel.findOne({ cart: cid });
+    req.logger.debug(
+      `Method: ${req.method}, url: ${
+        req.url
+      } - time: ${new Date().toLocaleTimeString()
+      } con userWithCart: ${userWithCart}`);
+    
+    // Creo un ticket pasandole el email del usuario dueño del carrito, y el monto total de la compra.
+    // El id carrito se le asigna al usuario cuando el mismo se registra. Relacion 1 a 1 entre cart y usuario.
+    const ticket = await ticketsManager.createTicket(userWithCart.email, purchaseAmount)
+
+    // Si algunos productos no tenian stock
+    if(outOfStock.length > 0 && purchaseAmount > 0) {
+      return this.httpResp.OK(res,'Purchase submitted, The following products are out of stock:',{outOfStock, ticket});
+    }
+    // Si todos los productos tenian stock
+    return httpResp.OK(res,'Purchase submitted, ticket:',ticket);
+    } catch (error) {
+      req.logger.fatal(
+        `Method: ${req.method}, url: ${
+          req.url
+        } - time: ${new Date().toLocaleTimeString()
+        } con ERROR: ${error.message}`);
+      this.httpResp.Error(res, 'Error while purchasing', error);
+    }
 
   };
 }

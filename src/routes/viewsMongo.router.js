@@ -65,7 +65,7 @@ class ViewsMongoRoutes {
     
     this.router.get(`${this.path}/carts/:cid`, 
     [passportCall("jwt"), 
-    handlePolicies(["USER", "ADMIN", "GOLD", "SILVER", "BRONCE"])],
+    handlePolicies(["USER", "PREMIUM","ADMIN", "GOLD", "SILVER", "BRONCE"])],
      async (req, res) => {
       try {
         // TODO: HACER VALIDACIONES *
