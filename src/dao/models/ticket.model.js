@@ -1,8 +1,20 @@
-import mongoose from "mongoose";
+import mongoose, { Types } from "mongoose";
 
 const ticketCollection = "Ticket";
 
 const ticketSchema = new mongoose.Schema({
+  products: {
+    type: [
+      {
+        product: {
+          type: Types.ObjectId,
+          ref: "products"
+        },
+        quantity: Number
+      }
+    ],
+    default: []
+  },
   code: {
     type: String,
     required: true,

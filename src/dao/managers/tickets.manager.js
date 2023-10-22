@@ -2,11 +2,14 @@ import { ticketModel } from "../models/ticket.model.js";
 
 class TicketManager {
 
-  async createTicket(purchaser, amount) {
+  async createTicket(purchaser, amount, products) {
     try {
+      console.log("🚀 ~ file: tickets.manager.js:11 ~ TicketManager ~ createTicket ~ products:", products)
+
       const newTicket = await ticketModel.create({
         purchaser,
         amount,
+        products
       })
   
       return {

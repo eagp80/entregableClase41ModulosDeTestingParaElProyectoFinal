@@ -28,7 +28,7 @@ class SessionRoutes {//no es un Router pero adentro tiene uno
     this.initSessionRoutes();
   }
 
-  initSessionRoutes() {//  api/v1/session/logout
+  initSessionRoutes() {
     this.router.get(`${this.path}/current`, 
     [passportCall("jwt"), handlePolicies(["USER","ADMIN"])],
     async (req, res) =>{
@@ -167,16 +167,15 @@ class SessionRoutes {//no es un Router pero adentro tiene uno
       } 
 
     });
-
+    //  api/v1/session/register
     this.router.post(`${this.path}/register`, passport.authenticate("registerpassport", {failureRedirect:'./failregister'}), async (req,res)=>{
-      try{
-        
-        //algo
+      try{        
         req.logger.http(
           `Method: ${req.method}, url: ${
             req.url
           } - time: ${new Date().toLocaleTimeString()
-          } -Obteniendo body******, resultado: ${req.body}`); 
+          } -Obteniendo body******, resultado: ${req.body}`);      
+
         // const { first_name, last_name, email, age, password } = req.body;
         
         // const pswHashed = await createHashValue(password);

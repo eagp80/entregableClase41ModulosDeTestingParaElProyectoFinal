@@ -23,7 +23,7 @@ const userSchema = new Schema({
   password: String,
   cart: {
     type: Types.ObjectId,
-    ref: "carts",    
+    ref: "Cart",    
   },
   role: {
     type: String,

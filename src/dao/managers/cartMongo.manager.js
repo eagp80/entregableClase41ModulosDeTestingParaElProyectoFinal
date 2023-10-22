@@ -71,7 +71,7 @@ class CartsMongoManager {
       
       const newCartMongo = await cartsMongoModel.create(cartMongoBody);
       if(!newCartMongo){
-        throw "no se creo el documento en mongo atlas";
+        throw "no se creo el cart en mongo atlas";
       }
       return newCartMongo;
 
@@ -80,7 +80,7 @@ class CartsMongoManager {
         `Method: cartsMongo.manager.js:79 ~ CartsMongoManager ~ createCartMongo,
          - time: ${new Date().toLocaleTimeString()
         } con ERROR: ${error.message}`);
-        throw error; 
+        throw 'error in createCartMongo in cartMongoManager.js'+ error; 
     }
   };
 

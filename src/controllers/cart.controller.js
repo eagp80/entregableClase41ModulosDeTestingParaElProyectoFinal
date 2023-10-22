@@ -311,9 +311,10 @@ class CartController {
     const { cid } = req.params;    
     try {
     // verificando existencia del cart
-    const cart = await this.cartMongoManager.getCartMongoByIdPopulate(cid);         
+    const cart = await this.cartMongoManager.getCartMongoByIdPopulate(cid);  //OJOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO       
       if (!cart)  return this.httpResp.BadRequest(res,'Cart not found',cart);
     const outOfStock = [];// defino inicializo variables para almacenar productos cuyo stock es menor a la compra
+    const addProducts = [];// defino inicializo variables para almacenar productos cuyo stock es menor a la compra
     let purchaseAmount = 0;// defino inicializo monto total de compra
 
     // Si tiene existencia suficiente: lo sumo al monto total de la compra, actualizo la existencia, y lo elimino del carrito.
@@ -325,6 +326,7 @@ class CartController {
           stock: element.product.stock - element.quantity
         })
         await this.cartMongoManager.deleteProductFromCart(cid, element.product._id)
+        addProducts.push(element);
       } else {
         outOfStock.push(element.product.title)
       }
@@ -340,7 +342,8 @@ class CartController {
     }
 
     // verificando el id de usuario que es propietario de ese cart
-    const userWithCart = await userModel.findOne({ cart: cid });
+    const userWithCart = await userModel.findOne({ cart: cid }).populate('cart');
+    console.log("🚀 ~ file: cart.controller.js:344 ~ CartController ~ purchaseCart= ~ userWithCart:", userWithCart)
     req.logger.debug(
       `Method: ${req.method}, url: ${
         req.url
@@ -349,7 +352,7 @@ class CartController {
     
     // Creo un ticket pasandole el email del usuario dueño del carrito, y el monto total de la compra.
     // El id carrito se le asigna al usuario cuando el mismo se registra. Relacion 1 a 1 entre cart y usuario.
-    const ticket = await ticketsManager.createTicket(userWithCart.email, purchaseAmount)
+    const ticket = await ticketsManager.createTicket(userWithCart.email, purchaseAmount,addProducts);
 
     // Si algunos productos no tenian stock
     if(outOfStock.length > 0 && purchaseAmount > 0) {

@@ -9,11 +9,10 @@ import jwt from "passport-jwt";
 import ROLES from "../constantes/role.js";
 import { SECRET_JWT, cookieExtractor } from "../utils/jwt.js";
 import { Schema, model, Types } from "mongoose";
-import CartsMongoManager from "../dao/managers/cartMongo.manager.js";
+import cartsMongoModel from "../dao/models/cartsMongo.models.js";
 
 const { ObjectId } = Types;
 
-const cartsMongoManager = new CartsMongoManager();
 
 const JWTStrategy = jwt.Strategy;
 const ExtractJWT = jwt.ExtractJwt;
@@ -37,6 +36,9 @@ const initializePassport = () => {
       const role= 'USER';
       try {
         let user = await userModel.findOne({email:username});
+        console.log("🚀 ~ file: passport.config.js:40 ~ {passReqToCallback:true,usernameField:'email'}, ~ user:", user)
+
+        
         if(user){
           req.logger.http(
             `Method: ${req.method}, url: ${
@@ -46,34 +48,39 @@ const initializePassport = () => {
           );
           return done(null,false); // ya existe usuario no puedes continuar
         }
-        const cartMongo = {"products": []};
-        const newCartMongo = await cartsMongoManager.createCartMongo(cartMongo);
-        if (!newCartMongo) {
-          req.logger.warning(
-            `Method: ${req.method}, url: ${
-              req.url
-            } - time: ${new Date().toLocaleTimeString()
-            } cartMongo asociado no creado al registrarse usuario, no se crea nuevo usuario`
-          );
-          return res.json({
-            message: `the cartMongo not created, and the user not created`,
-          });
-        }
+                  //inicio logica register user
+                  const cartMongo = {"products": []};
+                  //const newCartMongo = await cartsMongoManager.createCartMongo(cartMongo);
+                  const newCartMongo = await cartsMongoModel.create(cartMongo);
 
-        const idCartUser = newCartMongo._id;
-        const cartNewId= new ObjectId(idCartUser);
+                  console.log("🚀 ~ file: passport.config.js:53 ~ {passReqToCallback:true,usernameField:'email'}, ~ newCartMongo:", newCartMongo)
+                  
+                  if (!newCartMongo) {
+                    req.logger.warning(
+                      `Method: ${req.method}, url: ${
+                        req.url
+                      } - time: ${new Date().toLocaleTimeString()
+                      } cartMongo asociado no creado al registrarse usuario, no se crea nuevo usuario`
+                    );
+                    return res.json({
+                      message: `the cartMongo not created, and the user not created`,
+                    });
+                  }
+                  const idCartUser = newCartMongo._id;
+                  const cartNewId= new ObjectId(idCartUser);
+             
+                  const newUser = {
+                    first_name,
+                    last_name,
+                    email,
+                    age,
+                    password: await createHashValue(password),
+                    role,
+                    cart: cartNewId,
+                  };
+                  let result = await userModel.create(newUser);
+                  // fin logica register user
 
-   
-        const newUser = {
-          first_name,
-          last_name,
-          email,
-          age,
-          password: await createHashValue(password),
-          role,
-          cart: cartNewId,
-        };
-        let result = await userModel.create(newUser);
         return done(null,result);
         
       } catch (error) {
@@ -104,7 +111,9 @@ const initializePassport = () => {
           if (!user) {
             console.log("entro a addNewUser en passport-github");// no tengo disponible aca req para usar req.logger
             const cartMongo = {"products": []};
-            const newCartMongo = await cartsMongoManager.createCartMongo(cartMongo);
+            //const newCartMongo = await cartsMongoManager.createCartMongo(cartMongo);
+            const newCartMongo = await cartsMongoModel.create(cartMongo);
+
              if (!newCartMongo) {
              return res.json({
             message: `the cartMongo not created`,
