@@ -50,7 +50,6 @@ const initializePassport = () => {
         }
                   //inicio logica register user
                   const cartMongo = {"products": []};
-                  //const newCartMongo = await cartsMongoManager.createCartMongo(cartMongo);
                   const newCartMongo = await cartsMongoModel.create(cartMongo);
 
                   console.log("🚀 ~ file: passport.config.js:53 ~ {passReqToCallback:true,usernameField:'email'}, ~ newCartMongo:", newCartMongo)
@@ -111,7 +110,6 @@ const initializePassport = () => {
           if (!user) {
             console.log("entro a addNewUser en passport-github");// no tengo disponible aca req para usar req.logger
             const cartMongo = {"products": []};
-            //const newCartMongo = await cartsMongoManager.createCartMongo(cartMongo);
             const newCartMongo = await cartsMongoModel.create(cartMongo);
 
              if (!newCartMongo) {

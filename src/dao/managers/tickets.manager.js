@@ -21,6 +21,19 @@ class TicketManager {
     }
   }
 
+  async getLastTicketUser(purchaser){
+    console.log("🚀 ~ file: tickets.manager.js:25 ~ TicketManager ~ getLastTicketUser ~ purchaser:", purchaser)
+    try {
+
+      const ticket = await ticketModel.findOne({purchaser}).limit(1).sort({updatedAt: -1}).populate("products.product").exec();
+
+      return ticket;
+      
+    } catch (error) {
+      throw new Error('Error while getLastTicketUser')
+    }
+  }
+
 }
 
 export default new TicketManager();

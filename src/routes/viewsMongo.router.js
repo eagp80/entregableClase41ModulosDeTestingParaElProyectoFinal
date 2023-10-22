@@ -6,6 +6,7 @@ import { NODE_ENV, PORT, API_VERSION, CURSO } from "../config/config.js";
 import { passportCall } from "../utils/jwt.js";
 import handlePolicies from "../middleware/handle-policies.middleware.js";
 import { HttpResponse } from "../middleware/error-handler.js";
+import ticketManager from "../dao/managers/tickets.manager.js";
 const httpResp  = new HttpResponse;
 
 class ViewsMongoRoutes {
@@ -13,6 +14,7 @@ class ViewsMongoRoutes {
   router = Router();
   productMongoManager = new ProductsMongoManager();
   cartsMongoManager = new CartsMongoManager();
+  //ticketManager = new ticketsManager();
   role="USER";
 
   constructor() {
@@ -175,6 +177,42 @@ class ViewsMongoRoutes {
         req.user.role="ADMIN";
       }else{ req.user.role = "USER" }
 
+      //GET CURRENT TICKET USER
+      const lastTicket = await ticketManager.getLastTicketUser(req.session?.user?.email||req.user.user.email);
+      console.log("🚀 ~ file: viewsMongo.router.js:182 ~ ViewsMongoRoutes ~ lastTicket:",  lastTicket)
+      const arrayLastTicket = [];
+      lastTicket.products.forEach(prod => {
+        return arrayLastTicket.push({
+          title:prod.product.title,
+          price:prod.product.price,
+          quantity:prod.quantity,
+          total:prod.quantity*prod.product.price,
+        })
+      	
+      })
+      //END
+
+      //////////////////GET CURRENT CART
+      const cartProducts = await this.cartsMongoManager.getCartMongoById(req.user.user.cart)
+     const selectProducts = "Total de productos seleccionados: "+ cartProducts.products.length
+     const cartCurrent = [];
+     let stockMessage = ""
+     cartProducts.products.forEach(prod => {
+      console.log("🚀 ~ file: viewsMongo.router.js:188 ~ ViewsMongoRoutes ~ prod:", prod)
+      stockMessage = prod.quantity>prod.product.stock ? "Sin stock suficiente":"Stock disponible"
+       return cartCurrent.push({
+         title:prod.product.title,
+         price:prod.product.price,
+         quantity:prod.quantity,
+         id:prod.product._id,
+         cartId:cartProducts._id,
+         stockMessage
+       })
+       
+     })
+           ///////////////END
+
+
         res.render("products", {
           role: req.session?.user?.rol||req.user.user.role,
           name: req.session?.user?.name||req.user.user.name,
@@ -184,6 +222,10 @@ class ViewsMongoRoutes {
           cart: req.user.user.cart,
           age: req.session?.user?.age||req.user.user.age,
           payload: docs,
+          cartCurrent:cartCurrent,
+          selectProducts:selectProducts,
+          ticket: arrayLastTicket,
+          totalTicket: lastTicket.amount,
           totalPages: totalPages,
           prevPage: prevPage,
           nextPage: nextPage,

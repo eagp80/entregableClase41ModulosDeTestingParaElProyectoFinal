@@ -33,7 +33,7 @@ class CartsMongoManager {
 
   getCartMongoById = async (id) => {
     try {
-      return await cartsMongoModel.findById({ _id: id });
+      return await cartsMongoModel.findById({ _id: id }).populate("products.product");
     } catch (error) {
       req.logger.fatal(
         `Method: cartsMongo.manager.js:39 ~ CartsMongoManager ~ getCartMongoById,

@@ -1,5 +1,43 @@
 {{>profile1 }}
 
+<div>
+  <H1>ÚLTIMO TICKET DE COMPRA</H1>
+  <h2>TOTAL ÚLTIMA COMPRA: {{totalTicket}}</h2>
+  <ul>
+    {{#each ticket}} 
+
+      <li>
+        Product: {{this.title}} - 
+        Cant: {{this.quantity}} -
+        Precio: {{this.price}} -
+        Total: {{this.total}} 
+      </li>
+    {{/each}}
+  </ul>
+</div>
+<hr>
+<H2>CARRITO DE PRODUCTOS ACTUAL POR PROCESAR</H2>
+ {{selectProducts}}       
+  <ul>
+    {{#each cartCurrent}} 
+
+      <li>
+        Product: {{this.title}} - 
+        Cant: {{this.quantity}} -
+        Precio: {{this.price}} -
+        {{this.stockMessage}}
+          <form action="../carts/{{this.cartId}}/products/{{this.id}}" method="DELETE">
+
+            <button type="submit">Quitar</button>
+          </form>
+      </li>
+    {{/each}}
+  </ul>
+
+  <form action="../carts/{{cart}}/purchase" method="post">
+    <H3>EJECUTAR COMPRA <button type="submit">PURCHASE</button></H3>
+  </form>
+  <hr>
 <H1>Lista de PRODUCTOS</H1>
 
 {{#each payload}}
@@ -7,6 +45,7 @@
   <form action="{{../cartOwn}}{{this.id}}" method="post">
     <button type="submit">Add to cart</button>
   </form>
+  <hr>
 {{/each}}
 <script>
     let hasNextPage=false;
@@ -32,3 +71,5 @@
 <a href="{{nextLink}}"> <button>Siguiente</button> </a>
 {{/if}}
 </div>
+
+
