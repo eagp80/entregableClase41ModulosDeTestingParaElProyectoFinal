@@ -26,10 +26,32 @@
         Cant: {{this.quantity}} -
         Precio: {{this.price}} -
         {{this.stockMessage}}
-          <form action="../carts/{{this.cartId}}/products/{{this.id}}" method="DELETE">
+
+
+            <!-- form con Id unico igual usando id de producto -->
+          <form id = "formDelete{{this.id}}" action="" method="POST"> 
+            <input type="hidden" name="_method" value="DELETE">
 
             <button type="submit">Quitar</button>
           </form>
+          <script>
+              document.querySelector('#formDelete{{this.id}}').addEventListener('submit', function (event) {
+                  event.preventDefault();
+
+                  // Envía la solicitud DELETE al servidor
+                  fetch("../carts/{{this.cartId}}/products/{{this.id}}", {
+                    method: 'DELETE'
+                  })
+                    .then(response => {
+                      // Maneja la respuesta del servidor
+                      location.reload();
+                    })
+                    .catch(error => {
+                      // Maneja errores
+                    });
+                });
+
+          </script>
       </li>
     {{/each}}
   </ul>
@@ -50,7 +72,8 @@
 <script>
     let hasNextPage=false;
     hasNextPage={{hasNextPage}}
-    console.log(hasNextPage);
+    console.log(hasNextPage);  
+
 </script>
 <div>   
     {{!-- <p>Tiene página previa: {{hasPrevPage}}</p>
