@@ -186,7 +186,7 @@ class CartController {
               } pid: ${pid} `
             );  
 
-            if(element.product.toString() === pid){//este if solo funciono con toString() en ambos
+            if(element.product.id.toString() === pid){//este if solo funciono con toString() en ambos
               req.logger.debug(
                 `Method: ${req.method}, url: ${
                   req.url

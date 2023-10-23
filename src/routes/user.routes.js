@@ -22,7 +22,7 @@ class UserRoutes {//no es un Router pero adentro tiene uno
 
   initUserRoutes() {//  api/v1/current/
     this.router.get(`${this.path}/current`, 
-    [passportCall("jwt"), handlePolicies(["USER","ADMIN","PREMIUM"])],    
+    [passportCall("jwt"), handlePolicies(["USER","ADMIN" ,"PREMIUM"])],    
     (req, res) =>{      
         return res.send(req.user); 
     });
